@@ -1,0 +1,152 @@
+[DEL] Primary Service
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0043
+	f000ffc0-0451-4000-b000-000000000000
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0043/char0047
+	f000ffc2-0451-4000-b000-000000000000
+	Vendor specific
+[DEL] Descriptor
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0043/char0047/desc0049
+	00002902-0000-1000-8000-00805f9b34fb
+	Client Characteristic Configuration
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0043/char0044
+	f000ffc1-0451-4000-b000-000000000000
+	Vendor specific
+[DEL] Descriptor
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0043/char0044/desc0046
+	00002902-0000-1000-8000-00805f9b34fb
+	Client Characteristic Configuration
+[DEL] Primary Service
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a
+	f242e492-88b7-462e-8889-e55716a49afb
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char0040
+	f242e492-88b7-462e-8889-e55716a49afe
+	Vendor specific
+[DEL] Descriptor
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char0040/desc0042
+	00002902-0000-1000-8000-00805f9b34fb
+	Client Characteristic Configuration
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char003e
+	f242e492-88b7-462e-8889-e55716a49afd
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char003b
+	f242e492-88b7-462e-8889-e55716a49afc
+	Vendor specific
+[DEL] Descriptor
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char003b/desc003d
+	00002902-0000-1000-8000-00805f9b34fb
+	Client Characteristic Configuration
+[DEL] Primary Service
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a
+	5d5b1447-f938-4e72-ba34-624f902fa84f
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char0038
+	5d5b1447-f938-4e72-ba34-624f902fa85f
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char0036
+	5d5b1447-f938-4e72-ba34-624f902fa85e
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char0034
+	5d5b1447-f938-4e72-ba34-624f902fa85d
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char0032
+	5d5b1447-f938-4e72-ba34-624f902fa85c
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char0030
+	5d5b1447-f938-4e72-ba34-624f902fa85b
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char002e
+	5d5b1447-f938-4e72-ba34-624f902fa85a
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char002c
+	5d5b1447-f938-4e72-ba34-624f902fa859
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char002a
+	5d5b1447-f938-4e72-ba34-624f902fa858
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char0028
+	5d5b1447-f938-4e72-ba34-624f902fa857
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char0026
+	5d5b1447-f938-4e72-ba34-624f902fa855
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char0024
+	5d5b1447-f938-4e72-ba34-624f902fa854
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char0022
+	5d5b1447-f938-4e72-ba34-624f902fa853
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char0020
+	5d5b1447-f938-4e72-ba34-624f902fa852
+	Vendor specific
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char001d
+	5d5b1447-f938-4e72-ba34-624f902fa851
+	Vendor specific
+[DEL] Descriptor
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char001d/desc001f
+	00002902-0000-1000-8000-00805f9b34fb
+	Client Characteristic Configuration
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char001b
+	5d5b1447-f938-4e72-ba34-624f902fa850
+	Vendor specific
+[DEL] Primary Service
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0009
+	0000180a-0000-1000-8000-00805f9b34fb
+	Device Information
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0009/char0018
+	00002a50-0000-1000-8000-00805f9b34fb
+	PnP ID
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0009/char0016
+	00002a2a-0000-1000-8000-00805f9b34fb
+	IEEE 11073-20601 Regulatory Cert. Data List
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0009/char0014
+	00002a29-0000-1000-8000-00805f9b34fb
+	Manufacturer Name String
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0009/char0012
+	00002a28-0000-1000-8000-00805f9b34fb
+	Software Revision String
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0009/char0010
+	00002a27-0000-1000-8000-00805f9b34fb
+	Hardware Revision String
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0009/char000e
+	00002a25-0000-1000-8000-00805f9b34fb
+	Serial Number String
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0009/char000c
+	00002a24-0000-1000-8000-00805f9b34fb
+	Model Number String
+[DEL] Characteristic
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0009/char000a
+	00002a23-0000-1000-8000-00805f9b34fb
+	System ID
+[DEL] Primary Service
+	/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0008
+	00001801-0000-1000-8000-00805f9b34fb
+	Generic Attribute Profile

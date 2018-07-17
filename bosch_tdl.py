@@ -18,8 +18,30 @@ GATT_SERVICE_IFACE = 'org.bluez.GattService1'
 GATT_CHRC_IFACE =    'org.bluez.GattCharacteristic1'
 
 
+def generic_error_cb(error):
+    print('D-Bus call failed: ' + str(error))
+    mainloop.quit()
 
-#def readLogStatus():
+def read_log_handler(value):
+	print("Entered read_log_handler")
+	print(value)
+	mainloop.quit()
+
+def read_log_status():
+
+    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char001b'
+    chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
+    #print(chrc)
+    print("--------------------------------")
+    chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
+
+    global read_log_chrc
+    read_log_chrc = (chrc, chrc_props)
+    #print(read_log_chrc)
+    #read_log_chrc[0].ReadValue(dbus_interface=GATT_CHRC_IFACE, reply_handler=read_log_handler, error_handler=generic_error_cb)
+    offset = 0
+    read_log_chrc[0].ReadValue({'offset': dbus.UInt16(offset, variant_level=1)}, dbus_interface=GATT_CHRC_IFACE, reply_handler = read_log_handler, error_handler= generic_error_cb)
+    print('Set readValue...')
 
 def process_services():
 
@@ -27,8 +49,13 @@ def process_services():
     service       = bus.get_object(BLUEZ_SERVICE_NAME, service_path)
     service_props = service.GetAll(GATT_SERVICE_IFACE, dbus_interface=DBUS_PROP_IFACE)
     
+    print(service_props)
     uuid = service_props['UUID']
     print(uuid)
+
+    # chrc_paths = service_props['Characteristics']
+    # for chrc_path in chrc_paths:
+    #     print(chrc_path)
 
 def main():
 
@@ -44,8 +71,9 @@ def main():
 	device.Connect()
 	print("Connected!")
 	
-	process_services()
-	#readLogStatus()
+	read_log_status()
+
+	mainloop.run()
 
 if __name__ == '__main__':
     main()
