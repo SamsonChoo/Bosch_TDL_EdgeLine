@@ -21,6 +21,14 @@ GATT_CHRC_IFACE =    'org.bluez.GattCharacteristic1'
 
 #def readLogStatus():
 
+def process_services():
+
+    service_path  = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a'
+    service       = bus.get_object(BLUEZ_SERVICE_NAME, service_path)
+    service_props = service.GetAll(GATT_SERVICE_IFACE, dbus_interface=DBUS_PROP_IFACE)
+    
+    uuid = service_props['UUID']
+    print(uuid)
 
 def main():
 
@@ -36,6 +44,7 @@ def main():
 	device.Connect()
 	print("Connected!")
 	
+	process_services()
 	#readLogStatus()
 
 if __name__ == '__main__':
