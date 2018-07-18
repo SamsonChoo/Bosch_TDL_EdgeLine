@@ -19,14 +19,20 @@ DBUS_PROP_IFACE =    'org.freedesktop.DBus.Properties'
 
 GATT_SERVICE_IFACE = 'org.bluez.GattService1'
 GATT_CHRC_IFACE =    'org.bluez.GattCharacteristic1'
+GATT_DESC_IFACE =    'org.bluez.GattDescriptor1'
 
 bus = None
 mainloop = None
 
-counter = 0
+counter_realtime_status = 0
+counter_data_transfer_status = 0
+counter_data_transfer_download = 0
 
 def terminate():
 	mainloop.quit()
+
+# ------------------------------------Callbacks------------------------------------
+
 
 # Error handler, called on any generic error
 def generic_error_cb(error):
@@ -45,30 +51,57 @@ def read_log_cb(value):
 	#terminate()
 	#read_log_status()
 
+#-----------------------------------------------------------------------	
+
 def realtime_status_cb():
 	print("Realtime status enabled")
+	enable_data_transfer_status_notification()
 
 def realtime_status_changed_cb(iface, changed_props, invalidated_props):
-	global counter
+	global counter_realtime_status
 	#print(counter)
-	if (counter == 0):
-		counter += 1
+	if (counter_realtime_status == 0):
+		counter_realtime_status += 1
 		return
 
+	counter_realtime_status = 0
 	# print("Realtime status changed")
 
 	value = changed_props.get('Value', None)
 	if(value[0] == 25):
 		print("Connection authenticated")
+	#terminate()	
+
+def data_transfer_status_cb():
+	print("Data transfer status enabled")
+	enable_data_transfer_download_notification()
+	#terminate()
+
+def data_transfer_status_changed_cb(iface, changed_props, invalidated_props):
+	global counter_data_transfer_status
+	#print(counter)
+	if (counter_data_transfer_status == 0):
+		counter_data_transfer_status += 1
+		return
+
+	counter_data_transfer_status = 0
+	print("Data transfer status changed")
+
+def data_transfer_download_cb():
+	print("Data transfer download enabled")
 	terminate()
 
-def data_transfer_status_cb(value):
-	print("Change in data transfer status")
+def data_transfer_download_changed_cb(iface, changed_props, invalidated_props):
+	global counter_data_transfer_download
+	#print(counter)
+	if (counter_data_transfer_download == 0):
+		counter_data_transfer_download += 1
+		return
 
-def data_transfer_download_cb(value):
-	print("Downloading Data")	
+	counter_data_transfer_download = 0
+	print('Downloading data')		
 	
-
+#----------------------------------------------------------------------------------
 
 def read_log_status():
 
@@ -116,10 +149,27 @@ def init_tdl():
 
 
 
-def enable_notifications():
+def enable_realtime_status_notification():
 
 	# Enable realtime status information notification .......................
-	char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char001d'
+	char_path_realtime_status = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char001d'
+	chrc_realtime_status = bus.get_object(BLUEZ_SERVICE_NAME, char_path_realtime_status)
+	chrc_props_realtime_status = chrc_realtime_status.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
+	chrc_arr_realtime_status = (chrc_realtime_status, chrc_props_realtime_status)
+
+	# Listen for changes
+	chrc_arr_prop_iface_realtime_status = dbus.Interface(chrc_arr_realtime_status[0], DBUS_PROP_IFACE)
+	chrc_arr_prop_iface_realtime_status.connect_to_signal("PropertiesChanged",
+                                          realtime_status_changed_cb)
+
+	# Subscribe to notifications
+	chrc_arr_realtime_status[0].StartNotify(reply_handler=realtime_status_cb,
+	                         	 error_handler=generic_error_cb,
+	                             dbus_interface=GATT_CHRC_IFACE)
+
+def enable_data_transfer_status_notification():
+
+	char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char003b'
 	chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
 	chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
 	chrc_arr = (chrc, chrc_props)
@@ -127,12 +177,65 @@ def enable_notifications():
 	# Listen for changes
 	chrc_arr_prop_iface = dbus.Interface(chrc_arr[0], DBUS_PROP_IFACE)
 	chrc_arr_prop_iface.connect_to_signal("PropertiesChanged",
-                                          realtime_status_changed_cb)
+                                          data_transfer_status_changed_cb)
 
 	# Subscribe to notifications
-	chrc_arr[0].StartNotify(reply_handler=realtime_status_cb,
+	chrc_arr[0].StartNotify(reply_handler=data_transfer_status_cb,
 	                         	 error_handler=generic_error_cb,
 	                             dbus_interface=GATT_CHRC_IFACE)
+
+def enable_data_transfer_download_notification():
+
+	char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char0040'
+	chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
+	chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
+	chrc_arr = (chrc, chrc_props)
+
+	# Listen for changes
+	chrc_arr_prop_iface = dbus.Interface(chrc_arr[0], DBUS_PROP_IFACE)
+	chrc_arr_prop_iface.connect_to_signal("PropertiesChanged",
+                                          data_transfer_download_changed_cb)
+
+	# Subscribe to notifications
+	chrc_arr[0].StartNotify(reply_handler=data_transfer_download_cb,
+	                         	 error_handler=generic_error_cb,
+	                             dbus_interface=GATT_CHRC_IFACE)	
+
+#--------------------------------------------------------------------------------------
+
+	# Enable data transfer status notification .......................
+	# char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char003b'
+	# chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
+	# chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
+	# chrc_arr = (chrc, chrc_props)
+
+	# # Listen for changes
+	# chrc_arr_prop_iface = dbus.Interface(chrc_arr[0], DBUS_PROP_IFACE)
+	# chrc_arr_prop_iface.connect_to_signal("PropertiesChanged",
+ #                                          data_transfer_status_changed_cb)
+
+	# # Subscribe to notifications
+	# chrc_arr[0].StartNotify(reply_handler=data_transfer_status_cb,
+	#                          	 error_handler=generic_error_cb,
+	#                              dbus_interface=GATT_CHRC_IFACE)
+
+#--------------------------------------------------------------------------------------
+
+	# Enable data transfer download notification .......................
+	# char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char003b'
+	# chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
+	# chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
+	# chrc_arr = (chrc, chrc_props)
+
+	# # Listen for changes
+	# chrc_arr_prop_iface = dbus.Interface(chrc_arr[0], DBUS_PROP_IFACE)
+	# chrc_arr_prop_iface.connect_to_signal("PropertiesChanged",
+ #                                          data_transfer_download_changed_cb)
+
+	# # Subscribe to notifications
+	# chrc_arr[0].StartNotify(reply_handler=data_transfer_download_cb,
+	#                          	 error_handler=generic_error_cb,
+	#                              dbus_interface=GATT_CHRC_IFACE)
 
 
 	# Enable data transfer status information notification ..................
@@ -165,6 +268,7 @@ def main():
 
 	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 	global bus
+	# SystemBus is global and usually started durong boot
 	bus = dbus.SystemBus()
 	global mainloop
 	mainloop = GObject.MainLoop()
@@ -176,7 +280,7 @@ def main():
 	print("Connected!")
 
 	# mainloop.run()
-	enable_notifications()
+	enable_realtime_status_notification()
 
 	init_tdl()
 
