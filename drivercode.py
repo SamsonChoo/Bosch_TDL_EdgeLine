@@ -12,6 +12,7 @@ except ImportError:
 import bluezutils
 import gattoperations as gatt
 import gattcallbacks as cb
+import packetoperations
 
 BLUEZ_SERVICE_NAME = 'org.bluez'
 DBUS_OM_IFACE =      'org.freedesktop.DBus.ObjectManager'
@@ -23,6 +24,8 @@ GATT_DESC_IFACE =    'org.bluez.GattDescriptor1'
 
 bus = None
 mainloop = None
+
+packet_arr = []
 
 counter_realtime_status = 0
 counter_data_transfer_status = 0
@@ -64,13 +67,17 @@ def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 		counter_realtime_status += 1
 		return
 
-	counter_realtime_status = 0
+	#counter_realtime_status = 0
 	# print("Realtime status changed")
 
 	value = changed_props.get('Value', None)
+	print("Realtime status changed:")
+	print(value)
 	if(value[0] == 25):
 		print("Connection authenticated")
-	#terminate()	
+	#terminate()
+	elif (value[0] == 0):
+		request_data_transfer_init()	
 
 def data_transfer_status_cb():
 	print("Data transfer status enabled")
@@ -84,23 +91,50 @@ def data_transfer_status_changed_cb(iface, changed_props, invalidated_props):
 		counter_data_transfer_status += 1
 		return
 
-	counter_data_transfer_status = 0
-	print("Data transfer status changed")
+	#counter_data_transfer_status = 0
+	#print("Data transfer status changed")
+	value = changed_props.get('Value', None)
+	if (value[0] == 1):
+		print("Transfer ongoing")
+	if(value[0] == 2):
+		print("Transfer done!")
+		tdl_mac_address = "A0:E6:F8:6C:8B:87"
+		device = bluezutils.find_device(tdl_mac_address, None)
+		device.Disconnect()
+		print ("Disconnected")
+		#global packet_arr
+		#packet_arr = []
+		#packetoperations.process_packet(packet_arr)
+
+		terminate()	
 
 def data_transfer_download_cb():
 	print("Data transfer download enabled")
-	terminate()
+	#terminate()
 
 def data_transfer_download_changed_cb(iface, changed_props, invalidated_props):
+	print("Entered on transfer download changed")
 	global counter_data_transfer_download
 	#print(counter)
 	if (counter_data_transfer_download == 0):
 		counter_data_transfer_download += 1
 		return
 
-	counter_data_transfer_download = 0
-	print('Downloading data')		
-	
+	#counter_data_transfer_download = 0
+	#print(changed_props)
+	value = changed_props.get('Value', None)
+	global packet_arr
+	#packet_arr = []
+	print(value)
+	#packet_arr.extend(value)		
+	#print(value)
+	print("\n")
+
+def request_from_packet_cb():
+	request_data_transfer_packet_zero()	
+
+def request_from_packet_zero_cb():
+	request_data_transfer()	
 #----------------------------------------------------------------------------------
 
 def read_log_status():
@@ -139,14 +173,80 @@ def auth_connection():
     									   #error_handler=generic_error_cb)
     #print("Value written")
 
+def request_data_transfer_init():
+
+    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char003e'
+    chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
+    chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
+    chrc_arr = (chrc, chrc_props)
+
+    #read_log_chrc[0].ReadValue(dbus_interface=GATT_CHRC_IFACE, reply_handler=read_log_handler, error_handler=generic_error_cb)
+    offset = 0
+    message_bytes = ''.join(chr(x) for x in [0x02])
+    chrc_arr[0].WriteValue(message_bytes, {'offset': dbus.UInt16(offset, variant_level=1)}, 
+    									   dbus_interface=GATT_CHRC_IFACE,
+    									   reply_handler=request_from_packet_cb,
+    									   error_handler=generic_error_cb)	    
+    print("Transfer requested")
+
+def request_data_transfer_packet_zero():
+
+    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char003e'
+    chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
+    chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
+    chrc_arr = (chrc, chrc_props)
+
+    #read_log_chrc[0].ReadValue(dbus_interface=GATT_CHRC_IFACE, reply_handler=read_log_handler, error_handler=generic_error_cb)
+    offset = 0
+    message_bytes = ''.join(chr(x) for x in [0x00])
+    chrc_arr[0].WriteValue(message_bytes, {'offset': dbus.UInt16(offset, variant_level=1)}, 
+    									   dbus_interface=GATT_CHRC_IFACE,
+    									   reply_handler=request_from_packet_zero_cb,
+    									   error_handler=generic_error_cb)
+
+def request_data_transfer():
+
+    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char003e'
+    chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
+    chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
+    chrc_arr = (chrc, chrc_props)
+
+    #read_log_chrc[0].ReadValue(dbus_interface=GATT_CHRC_IFACE, reply_handler=read_log_handler, error_handler=generic_error_cb)
+    offset = 0
+    message_bytes = ''.join(chr(x) for x in [0x01])
+    chrc_arr[0].WriteValue(message_bytes, {'offset': dbus.UInt16(offset, variant_level=1)}, 
+    									   dbus_interface=GATT_CHRC_IFACE)
+
+
+
+def stop_logging():
+
+    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char001b'
+    chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
+    chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
+    chrc_arr = (chrc, chrc_props)
+
+    #read_log_chrc[0].ReadValue(dbus_interface=GATT_CHRC_IFACE, reply_handler=read_log_handler, error_handler=generic_error_cb)
+    offset = 0
+    message_bytes = ''.join(chr(x) for x in [0x00])
+    chrc_arr[0].WriteValue(message_bytes, {'offset': dbus.UInt16(offset, variant_level=1)}, 
+    									   dbus_interface=GATT_CHRC_IFACE)	    
+    #print("Transfer requested")
+
 
 # First time device initialisation
 # Includes setting min, max paramater bound
 # Example: Set min & max temperature to set off alarm event
 def init_tdl():
 
+	# 1. Authenticate Connection
 	auth_connection()
 
+	# 2. Stop Logging
+	stop_logging()
+
+	# 3. Request bulk data transfer
+	#request_data_transfer() 
 
 
 def enable_realtime_status_notification():
