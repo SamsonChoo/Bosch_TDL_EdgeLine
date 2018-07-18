@@ -98,13 +98,16 @@ def data_transfer_status_changed_cb(iface, changed_props, invalidated_props):
 		print("Transfer ongoing")
 	if(value[0] == 2):
 		print("Transfer done!")
+
+		#Disconnect from device
 		tdl_mac_address = "A0:E6:F8:6C:8B:87"
 		device = bluezutils.find_device(tdl_mac_address, None)
 		device.Disconnect()
+
 		print ("Disconnected")
-		#global packet_arr
+		global packet_arr
 		#packet_arr = []
-		#packetoperations.process_packet(packet_arr)
+		packetoperations.process_packet(packet_arr)
 
 		terminate()	
 
@@ -113,7 +116,7 @@ def data_transfer_download_cb():
 	#terminate()
 
 def data_transfer_download_changed_cb(iface, changed_props, invalidated_props):
-	print("Entered on transfer download changed")
+	#print("Entered on transfer download changed")
 	global counter_data_transfer_download
 	#print(counter)
 	if (counter_data_transfer_download == 0):
@@ -125,10 +128,10 @@ def data_transfer_download_changed_cb(iface, changed_props, invalidated_props):
 	value = changed_props.get('Value', None)
 	global packet_arr
 	#packet_arr = []
-	print(value)
-	#packet_arr.extend(value)		
 	#print(value)
-	print("\n")
+	packet_arr.extend(value)		
+	#print(value)
+	#print("\n")
 
 def request_from_packet_cb():
 	request_data_transfer_packet_zero()	
