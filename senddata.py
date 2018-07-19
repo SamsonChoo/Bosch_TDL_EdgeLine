@@ -15,4 +15,4 @@
 def upload(temperature_data, unix_timestamp, humidity_data, pressure_data):
 
 	# Do your stuff here Samson :)
-
+	print("Entered upload method")
