@@ -93,17 +93,20 @@ def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 
 		# Start session
 		else:
-			print("Entered default status value")
+			print("!!!Entered default status value")
 			#Disconnect from device
 			tdl_mac_address = "A0:E6:F8:6C:8B:87"
 			device = bluezutils.find_device(tdl_mac_address, None)
 			device.Disconnect()
+			print("Disconnected")
+			terminate()
 
 
 	# Logged data deleted successfully
 	elif (value[0] == 33):		
 		print("Logged data deleted successfully")
 		start_logging()
+
 def data_transfer_status_cb():
 	print("Data transfer status enabled")
 	enable_data_transfer_download_notification()
@@ -442,6 +445,9 @@ def main():
 	global mainloop
 	mainloop = GObject.MainLoop()
 
+	# Argument check
+	#print(sys.argv)
+
 	# Connect to TDL device
 	tdl_mac_address = "A0:E6:F8:6C:8B:87"
 	device = bluezutils.find_device(tdl_mac_address, None)
@@ -452,7 +458,13 @@ def main():
 	enable_realtime_status_notification()
 
 	# Toggle between start/stop session
-	stop_session()
+	if (sys.argv[1] == 'start'):
+		print('Start session')
+		start_session()
+	elif (sys.argv[1] == 'stop'):
+		print('Stop session')
+		stop_session()	
+	# stop_session()
 	#start_session()
 
 	mainloop.run()
