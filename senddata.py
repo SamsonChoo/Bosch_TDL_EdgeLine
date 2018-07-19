@@ -50,6 +50,7 @@ def upload(temperature_data, unix_timestamp, humidity_data, pressure_data):
 
         client.tls_insecure_set(False)
         client.connect('thingsboard', 8883, 1)
+	      print("Entered upload method")
 
 
         # Blocking call that processes network traffic, dispatches callbacks and
@@ -57,4 +58,3 @@ def upload(temperature_data, unix_timestamp, humidity_data, pressure_data):
         # Other loop*() functions are available that give a threaded interface and a
         # manual interface.
 #         client.loop_forever()
-

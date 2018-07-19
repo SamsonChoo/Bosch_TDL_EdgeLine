@@ -10,8 +10,8 @@ except ImportError:
   import gobject as GObject
 
 import bluezutils
-import gattoperations as gatt
-import gattcallbacks as cb
+#import gattoperations as gatt
+#import gattcallbacks as cb
 import packetoperations
 
 BLUEZ_SERVICE_NAME = 'org.bluez'
@@ -25,14 +25,30 @@ GATT_DESC_IFACE =    'org.bluez.GattDescriptor1'
 bus = None
 mainloop = None
 
+receive_state = False
+
 packet_arr = []
 
 counter_realtime_status = 0
 counter_data_transfer_status = 0
 counter_data_transfer_download = 0
+counter_start_session = 0
 
 def terminate():
 	mainloop.quit()
+
+def disconnect_device():
+
+	tdl_mac_address = "A0:E6:F8:6C:8B:87"
+	device = bluezutils.find_device(tdl_mac_address, None)
+	device.Disconnect()
+	print("Disconnected")	
+
+def connect_device():
+	tdl_mac_address = "A0:E6:F8:6C:8B:87"
+	device = bluezutils.find_device(tdl_mac_address, None)
+	device.Connect()
+	print("Connected")	
 
 # ------------------------------------Callbacks------------------------------------
 
@@ -73,11 +89,42 @@ def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 	value = changed_props.get('Value', None)
 	print("Realtime status changed:")
 	print(value)
+
+	# 25 -- connecion authenticated notification
 	if(value[0] == 25):
 		print("Connection authenticated")
+		# if(receive_state == False):
+
+		# 	# Caveat to stop logging in start session
+		# 	stop_logging()
+		# 	#delete_logged_data()
+		# else:
+		# 	stop_logging()
+		stop_logging()	
+
+
 	#terminate()
 	elif (value[0] == 0):
-		request_data_transfer_init()	
+		# Stop session
+		if(receive_state == True):
+			request_data_transfer_init()
+
+		# Start session
+		else:
+			global counter_start_session
+			if (counter_start_session == 0):
+				counter_start_session += 1
+				delete_logged_data()
+			# Disconnect from device
+			disconnect_device()
+
+			terminate()
+
+
+	# Logged data deleted successfully
+	elif (value[0] == 33):		
+		print("Logged data deleted successfully")
+		start_logging()
 
 def data_transfer_status_cb():
 	print("Data transfer status enabled")
@@ -100,11 +147,8 @@ def data_transfer_status_changed_cb(iface, changed_props, invalidated_props):
 		print("Transfer done!")
 
 		#Disconnect from device
-		tdl_mac_address = "A0:E6:F8:6C:8B:87"
-		device = bluezutils.find_device(tdl_mac_address, None)
-		device.Disconnect()
+		disconnect_device()
 
-		print ("Disconnected")
 		global packet_arr
 		#packet_arr = []
 		packetoperations.process_packet(packet_arr)
@@ -176,6 +220,22 @@ def auth_connection():
     									   #error_handler=generic_error_cb)
     #print("Value written")
 
+def delete_logged_data():
+
+	# Update to required characteristic 
+    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char0038'
+    chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
+    chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
+    chrc_arr = (chrc, chrc_props)
+
+    #read_log_chrc[0].ReadValue(dbus_interface=GATT_CHRC_IFACE, reply_handler=read_log_handler, error_handler=generic_error_cb)
+    offset = 0
+    message_bytes = ''.join(chr(x) for x in [0x01])
+    chrc_arr[0].WriteValue(message_bytes, {'offset': dbus.UInt16(offset, variant_level=1)}, 
+    									   dbus_interface=GATT_CHRC_IFACE) 
+    									   #reply_handler=auth_connection_cb, 
+    									   #error_handler=generic_error_cb)	    
+
 def request_data_transfer_init():
 
     char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char003e'
@@ -235,18 +295,43 @@ def stop_logging():
     chrc_arr[0].WriteValue(message_bytes, {'offset': dbus.UInt16(offset, variant_level=1)}, 
     									   dbus_interface=GATT_CHRC_IFACE)	    
     #print("Transfer requested")
+def start_logging():
 
+    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char001b'
+    chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
+    chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
+    chrc_arr = (chrc, chrc_props)
 
-# First time device initialisation
-# Includes setting min, max paramater bound
-# Example: Set min & max temperature to set off alarm event
-def init_tdl():
+    #read_log_chrc[0].ReadValue(dbus_interface=GATT_CHRC_IFACE, reply_handler=read_log_handler, error_handler=generic_error_cb)
+    offset = 0
+    message_bytes = ''.join(chr(x) for x in [0x01])
+    chrc_arr[0].WriteValue(message_bytes, {'offset': dbus.UInt16(offset, variant_level=1)}, 
+    									   dbus_interface=GATT_CHRC_IFACE)	    
+    #print("Transfer requested")
+
+def start_session():
+	
+	# Not receiving any data in this session
+	global receive_state
+	receive_state = False
+
+	# Connect to 
+	# 1. Authenticate connection
+	auth_connection()
+
+	# 2. 
+
+def stop_session():
+
+	# Receiving data in this session
+	global receive_state
+	receive_state = True
 
 	# 1. Authenticate Connection
 	auth_connection()
 
 	# 2. Stop Logging
-	stop_logging()
+	# stop_logging()
 
 	# 3. Request bulk data transfer
 	#request_data_transfer() 
@@ -301,8 +386,8 @@ def enable_data_transfer_download_notification():
 
 	# Subscribe to notifications
 	chrc_arr[0].StartNotify(reply_handler=data_transfer_download_cb,
-	                         	 error_handler=generic_error_cb,
-	                             dbus_interface=GATT_CHRC_IFACE)	
+	                        error_handler=generic_error_cb,
+	                        dbus_interface=GATT_CHRC_IFACE)	
 
 #--------------------------------------------------------------------------------------
 
@@ -376,16 +461,24 @@ def main():
 	global mainloop
 	mainloop = GObject.MainLoop()
 
-	# Connect to TDL device
-	tdl_mac_address = "A0:E6:F8:6C:8B:87"
-	device = bluezutils.find_device(tdl_mac_address, None)
-	device.Connect()
-	print("Connected!")
+	# Argument check
+	#print(sys.argv)
 
-	# mainloop.run()
+	# Connect to TDL device
+	connect_device()
+
+	# Trigger enabling notifications
 	enable_realtime_status_notification()
 
-	init_tdl()
+	# Toggle between start/stop session
+	if (sys.argv[1] == 'start'):
+		print('Start session')
+		start_session()
+	elif (sys.argv[1] == 'stop'):
+		print('Stop session')
+		stop_session()	
+	# stop_session()
+	#start_session()
 
 	mainloop.run()
 

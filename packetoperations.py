@@ -158,14 +158,15 @@ def process_packet(packet_arr):
 
                      	# Lower 6 bits
                         humidity_lo_bits = ((packet_arr[humidity_index] & 0xFC) & 0xFF) >> 2
+                        print(humidity_lo_bits)
 
                         humidity_index -= 1
 
                         # Upper 2 bits
                         humidity_hi_bits = ((packet_arr[humidity_index] & 0x03) & 0xFF) << 6
-
+                        print(humidity_hi_bits)
                         humidity_result = (humidity_hi_bits + humidity_lo_bits)/2
-                         
+                        print(humidity_result) 
                         global humidity_data 
                         humidity_data.append(humidity_result)
 
@@ -181,7 +182,8 @@ def process_packet(packet_arr):
 
                         pressure_result = pressure_hi_bits + pressure_lo_bits - 100
 
-                        pressure_data.append(pressure_result)
+                        # global pressure_data
+                        # pressure_data.append(pressure_result)
 
                 # --------------------------------------------------------------------------------                        
 
