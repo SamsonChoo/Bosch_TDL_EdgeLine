@@ -32,9 +32,23 @@ packet_arr = []
 counter_realtime_status = 0
 counter_data_transfer_status = 0
 counter_data_transfer_download = 0
+counter_start_session = 0
 
 def terminate():
 	mainloop.quit()
+
+def disconnect_device():
+
+	tdl_mac_address = "A0:E6:F8:6C:8B:87"
+	device = bluezutils.find_device(tdl_mac_address, None)
+	device.Disconnect()
+	print("Disconnected")	
+
+def connect_device():
+	tdl_mac_address = "A0:E6:F8:6C:8B:87"
+	device = bluezutils.find_device(tdl_mac_address, None)
+	device.Connect()
+	print("Connected")	
 
 # ------------------------------------Callbacks------------------------------------
 
@@ -79,10 +93,14 @@ def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 	# 25 -- connecion authenticated notification
 	if(value[0] == 25):
 		print("Connection authenticated")
-		if(receive_state == False):
-			delete_logged_data()
-		else:
-			stop_logging()	
+		# if(receive_state == False):
+
+		# 	# Caveat to stop logging in start session
+		# 	stop_logging()
+		# 	#delete_logged_data()
+		# else:
+		# 	stop_logging()
+		stop_logging()	
 
 
 	#terminate()
@@ -93,12 +111,13 @@ def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 
 		# Start session
 		else:
-			print("!!!Entered default status value")
-			#Disconnect from device
-			tdl_mac_address = "A0:E6:F8:6C:8B:87"
-			device = bluezutils.find_device(tdl_mac_address, None)
-			device.Disconnect()
-			print("Disconnected")
+			global counter_start_session
+			if (counter_start_session == 0):
+				counter_start_session += 1
+				delete_logged_data()
+			# Disconnect from device
+			disconnect_device()
+
 			terminate()
 
 
@@ -128,11 +147,8 @@ def data_transfer_status_changed_cb(iface, changed_props, invalidated_props):
 		print("Transfer done!")
 
 		#Disconnect from device
-		tdl_mac_address = "A0:E6:F8:6C:8B:87"
-		device = bluezutils.find_device(tdl_mac_address, None)
-		device.Disconnect()
+		disconnect_device()
 
-		print ("Disconnected")
 		global packet_arr
 		#packet_arr = []
 		packetoperations.process_packet(packet_arr)
@@ -449,10 +465,7 @@ def main():
 	#print(sys.argv)
 
 	# Connect to TDL device
-	tdl_mac_address = "A0:E6:F8:6C:8B:87"
-	device = bluezutils.find_device(tdl_mac_address, None)
-	device.Connect()
-	print("Connected!")
+	connect_device()
 
 	# Trigger enabling notifications
 	enable_realtime_status_notification()
