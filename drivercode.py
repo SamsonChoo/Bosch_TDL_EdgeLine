@@ -25,6 +25,7 @@ GATT_DESC_IFACE =    'org.bluez.GattDescriptor1'
 bus = None
 mainloop = None
 
+# global receive_state
 receive_state = False
 
 packet_arr = []
@@ -93,36 +94,39 @@ def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 	# 25 -- connecion authenticated notification
 	if(value[0] == 25):
 		print("Connection authenticated")
-		# if(receive_state == False):
+		global receive_state
+		if(receive_state == False):
 
-		# 	# Caveat to stop logging in start session
-		# 	stop_logging()
-		# 	#delete_logged_data()
-		# else:
-		# 	stop_logging()
-		stop_logging()	
+			# Caveat to stop logging in start session
+			#stop_logging()
+			delete_logged_data()
+		else:
+			stop_logging()
+		# stop_logging()	
 
 
 	#terminate()
 	elif (value[0] == 0):
 		# Stop session
+		#global receive_state
 		if(receive_state == True):
+			print("Requesting data transfer \n")
 			request_data_transfer_init()
 
 		# Start session
 		else:
-			global counter_start_session
-			if (counter_start_session == 0):
-				counter_start_session += 1
-				delete_logged_data()
+			# global counter_start_session
+			# if (counter_start_session == 0):
+			# 	counter_start_session += 1
+			# 	delete_logged_data()
 			# Disconnect from device
+			print("Disconnecting in real time status changed")
 			disconnect_device()
 
 			terminate()
 
-
 	# Logged data deleted successfully
-	elif (value[0] == 33):		
+	elif (value[0] == 33 or value[0] == 17):		
 		print("Logged data deleted successfully")
 		start_logging()
 
@@ -147,6 +151,7 @@ def data_transfer_status_changed_cb(iface, changed_props, invalidated_props):
 		print("Transfer done!")
 
 		#Disconnect from device
+		print("Disconnecting in data transfer status")
 		disconnect_device()
 
 		global packet_arr
@@ -234,7 +239,8 @@ def delete_logged_data():
     chrc_arr[0].WriteValue(message_bytes, {'offset': dbus.UInt16(offset, variant_level=1)}, 
     									   dbus_interface=GATT_CHRC_IFACE) 
     									   #reply_handler=auth_connection_cb, 
-    									   #error_handler=generic_error_cb)	    
+    									   #error_handler=generic_error_cb)
+    print('Wrote delete logged data cmd')									   	    
 
 def request_data_transfer_init():
 
