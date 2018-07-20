@@ -6,6 +6,10 @@ unix_timestamp   = []
 humidity_data    = []
 pressure_data	 = []
 
+# Base = 0.5 -- Device temperature reading resolution
+def round_temperature(x, prec = 1,base = 0.5):
+	return round(base * round(float(x)/base), prec)
+
 def process_packet(packet_arr):
     print("Processing packets")
     print('\n')
@@ -108,6 +112,9 @@ def process_packet(packet_arr):
                     #print(temp_fraction_bits)
                     # Finally, after all the annoying bit arithmetic, I present to you - the temperature
                     temp_result = (temp_hi_bits + temp_lo_bits + abs_min_temp) + (temp_fraction_bits * 0.01)
+
+                    # Round to nearest resolution
+                    temp_result = round_temperature(temp_result)
                     
                     # To match the iOS app temperature readings, anomaly in TDL documentation and iOS app readings
                     #temp_result -= 0.5
@@ -230,8 +237,8 @@ def process_packet(packet_arr):
 
     print(temperature_data)
     print(unix_timestamp)
-    #senddata.upload(temperature_data,
-					# unix_timestamp,
-					# humidity_data,
-					# pressure_data)	       	
+    senddata.upload(temperature_data,
+					unix_timestamp,
+					humidity_data,
+					pressure_data)	       	
 
