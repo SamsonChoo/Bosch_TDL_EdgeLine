@@ -57,4 +57,4 @@ def upload(temperature_data, unix_timestamp, humidity_data, pressure_data):
         # handles reconnecting.
         # Other loop*() functions are available that give a threaded interface and a
         # manual interface.
-#         client.loop_forever()
+        client.loop_forever()
