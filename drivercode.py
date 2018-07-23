@@ -42,6 +42,7 @@ default_status_value_counter = 0
 data_transfer_status_changed_counter = 0
 transfer_ongoing_counter = 0
 temp_packet_holder_counter = 0
+delete_logged_data_counter = 0
 
 def terminate():
 	global mainloop
@@ -130,6 +131,8 @@ def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 
 		global default_status_value_counter
 
+		# print("Check counter %d\n" %(default_status_value_counter))
+
 		if (default_status_value_counter == 0):
 			default_status_value_counter += 1
 
@@ -152,9 +155,13 @@ def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 				terminate()
 
 	# Logged data deleted successfully
-	elif (value[0] == 33 or value[0] == 17):		
-		print("Logged data deleted successfully")
-		start_logging()
+	elif (value[0] == 33 or value[0] == 17):
+
+		global delete_logged_data_counter
+		if (delete_logged_data_counter == 0):
+			delete_logged_data_counter += 1
+			print("Logged data deleted successfully")
+			start_logging()
 
 def data_transfer_status_cb():
 	print("Data transfer status enabled")
@@ -374,6 +381,7 @@ def start_logging():
     									   dbus_interface=GATT_CHRC_IFACE)	    
     #print("Transfer requested")
 
+# Method called to start logging for data
 def start_session():
 	
 	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
@@ -390,17 +398,17 @@ def start_session():
 	connect_device()
 
 	# Trigger enabling notifications
-	enable_realtime_status_notification()
+	# enable_realtime_status_notification()
 	# Not receiving any data in this session
 	global receive_state
 	receive_state = False
 
-	# Connect to 
-	# 1. Authenticate connection
-	auth_connection()
+	# Trigger enabling notifications
+	enable_realtime_status_notification()
 
 	mainloop.run()
 
+# Method called to stop logging and receive data
 def stop_session():
 
 	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
