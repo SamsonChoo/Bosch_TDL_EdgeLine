@@ -34,6 +34,10 @@ def on_message(client, userdata, msg):
        requestId = msg.topic[len('v1/devices/me/rpc/request/'):len(msg.topic)]
        print('This is a RPC call. RequestID: ' + requestId + '. Going to reply now!')
        client.publish('v1/devices/me/rpc/response/' + requestId, "{\"value1\":\"A\", \"value2\":\"B\"}", 1)
+   if "True" in str(msg.payload):
+       continue
+   if "False" in str(msg.payload):
+       continue
 
 def upload(temperature_data, unix_timestamp, humidity_data, pressure_data):
     for i,w in enumerate(unix_timestamp):
