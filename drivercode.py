@@ -4,6 +4,7 @@ import re
 import sys
 import dbus
 import dbus.mainloop.glib
+from dbus.mainloop.glib import DBusGMainLoop
 try:
   from gi.repository import GObject
 except ImportError:
@@ -30,13 +31,22 @@ receive_state = False
 
 packet_arr = []
 
+temp_packet_holder = []
+
 counter_realtime_status = 0
 counter_data_transfer_status = 0
 counter_data_transfer_download = 0
 counter_start_session = 0
+auth_connection_counter = 0
+default_status_value_counter = 0
+data_transfer_status_changed_counter = 0
+transfer_ongoing_counter = 0
+temp_packet_holder_counter = 0
 
 def terminate():
+	global mainloop
 	mainloop.quit()
+	print("Mainloop Terminated")
 
 def disconnect_device():
 
@@ -75,6 +85,8 @@ def read_log_cb(value):
 
 def realtime_status_cb():
 	print("Realtime status enabled")
+	#global mainloop
+	#smainloop.run()
 	enable_data_transfer_status_notification()
 
 def realtime_status_changed_cb(iface, changed_props, invalidated_props):
@@ -88,42 +100,56 @@ def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 	# print("Realtime status changed")
 
 	value = changed_props.get('Value', None)
-	print("Realtime status changed:")
-	print(value)
+	#print("Realtime status changed:")
+	#print(value)
 
 	# 25 -- connecion authenticated notification
 	if(value[0] == 25):
-		print("Connection authenticated")
-		global receive_state
-		if(receive_state == False):
+		global auth_connection_counter
+		if (auth_connection_counter == 0):
+			auth_connection_counter += 1
+			print("Connection authenticated")
+			global receive_state
 
-			# Caveat to stop logging in start session
-			#stop_logging()
-			delete_logged_data()
-		else:
-			stop_logging()
+			# For start_session()
+			if(receive_state == False):
+
+				# Caveat to stop logging in start session
+				#stop_logging()
+				delete_logged_data()
+
+			# For stop_session()	
+			else:
+				print('Attempting to stop logging')
+				stop_logging()
 		# stop_logging()	
 
 
 	#terminate()
 	elif (value[0] == 0):
-		# Stop session
-		#global receive_state
-		if(receive_state == True):
-			print("Requesting data transfer \n")
-			request_data_transfer_init()
 
-		# Start session
-		else:
-			# global counter_start_session
-			# if (counter_start_session == 0):
-			# 	counter_start_session += 1
-			# 	delete_logged_data()
-			# Disconnect from device
-			print("Disconnecting in real time status changed")
-			disconnect_device()
+		global default_status_value_counter
 
-			terminate()
+		if (default_status_value_counter == 0):
+			default_status_value_counter += 1
+
+			# Stop session
+			#global receive_state
+			if(receive_state == True):
+				print("Requesting data transfer")
+				request_data_transfer_init()
+
+			# Start session
+			else:
+				# global counter_start_session
+				# if (counter_start_session == 0):
+				# 	counter_start_session += 1
+				# 	delete_logged_data()
+				# Disconnect from device
+				print("Disconnecting in real time status changed")
+				disconnect_device()
+
+				terminate()
 
 	# Logged data deleted successfully
 	elif (value[0] == 33 or value[0] == 17):		
@@ -142,45 +168,78 @@ def data_transfer_status_changed_cb(iface, changed_props, invalidated_props):
 		counter_data_transfer_status += 1
 		return
 
+	global data_transfer_status_changed_counter
+	#print("Entered data transfer status changed cb")
+	# if (data_transfer_status_changed_counter == 0):
+	# 	data_transfer_status_changed_counter += 1
+	#print("Entered data transfer status changed cb")
 	#counter_data_transfer_status = 0
 	#print("Data transfer status changed")
 	value = changed_props.get('Value', None)
 	if (value[0] == 1):
-		print("Transfer ongoing")
+		global transfer_ongoing_counter
+		if (transfer_ongoing_counter == 0):
+			transfer_ongoing_counter += 1
+			print("Transfer ongoing")
 	if(value[0] == 2):
-		print("Transfer done!")
+		if (data_transfer_status_changed_counter == 0):
+			data_transfer_status_changed_counter += 1
+			print("Transfer done!")
 
-		#Disconnect from device
-		print("Disconnecting in data transfer status")
-		disconnect_device()
+			#Disconnect from device
+			print("Disconnecting in data transfer status")
+			disconnect_device()
 
-		global packet_arr
-		#packet_arr = []
-		packetoperations.process_packet(packet_arr)
-
-		terminate()	
+			global packet_arr
+			#packet_arr = []
+			packetoperations.process_packet(packet_arr)
+			print("Terminating...")
+			terminate()	
 
 def data_transfer_download_cb():
 	print("Data transfer download enabled")
+	# All notifications now enabled...
+	#global mainloop
+	#mainloop.run()
+	auth_connection()
 	#terminate()
 
 def data_transfer_download_changed_cb(iface, changed_props, invalidated_props):
-	#print("Entered on transfer download changed")
+	# print("Entered on transfer download changed")
 	global counter_data_transfer_download
+	global temp_packet_holder
+	global temp_packet_holder_counter
+	global packet_arr
 	#print(counter)
 	if (counter_data_transfer_download == 0):
 		counter_data_transfer_download += 1
 		return
-
+	#print("Entered on transfer download changed")
 	#counter_data_transfer_download = 0
 	#print(changed_props)
+	if (temp_packet_holder_counter == 0):
+		temp_packet_holder_counter += 1
+		value = changed_props.get('Value', None)
+		temp_packet_holder = value
+		#global packet_arr
+		#packet_arr = []
+		print(value)
+		print(type(value))
+		packet_arr.extend(value)		
+		#print(value)
+		print("\n")
+
 	value = changed_props.get('Value', None)
-	global packet_arr
-	#packet_arr = []
-	#print(value)
-	packet_arr.extend(value)		
-	#print(value)
-	#print("\n")
+
+	if(value == temp_packet_holder):
+		return
+	else:
+		# Update packet holder 
+		temp_packet_holder = value
+		print(value)
+		print('\n')
+		packet_arr.extend(value)
+
 
 def request_from_packet_cb():
 	request_data_transfer_packet_zero()	
@@ -317,6 +376,21 @@ def start_logging():
 
 def start_session():
 	
+	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+	global bus
+	# SystemBus is global and usually started durong boot
+	bus = dbus.SystemBus()
+	global mainloop
+	mainloop = GObject.MainLoop()
+
+	# Argument check
+	#print(sys.argv)
+
+	# Connect to TDL device
+	connect_device()
+
+	# Trigger enabling notifications
+	enable_realtime_status_notification()
 	# Not receiving any data in this session
 	global receive_state
 	receive_state = False
@@ -325,16 +399,45 @@ def start_session():
 	# 1. Authenticate connection
 	auth_connection()
 
-	# 2. 
+	mainloop.run()
 
 def stop_session():
 
-	# Receiving data in this session
+	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+	global bus
+	#SystemBus is global and usually started during boot
+	bus = dbus.SystemBus()
+	global mainloop
+	mainloop = GObject.MainLoop()
+
+	# DBusGMainLoop(set_as_default=True)
+
+	# dbus_loop = DBusGMainLoop()
+
+	# bus = dbus.SessionBus(mainloop=dbus_loop)
+	# Argument check
+	#print(sys.argv)
+
+	# Connect to TDL device
+	connect_device()
+
 	global receive_state
 	receive_state = True
 
+	#mainloop.run()
+	# Trigger enabling notifications
+	#print("Attempting to enable notifications")
+	enable_realtime_status_notification()
+
+	mainloop.run()	
+	# Receiving data in this session
+	# global receive_state
+	# receive_state = True
+	#mainloop.run()
 	# 1. Authenticate Connection
-	auth_connection()
+	#auth_connection()
+
+	#mainloop.run()
 
 	# 2. Stop Logging
 	# stop_logging()
@@ -458,37 +561,37 @@ def enable_data_transfer_download_notification():
 
 
 
-def main():
+# def main():
 
-	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-	global bus
-	# SystemBus is global and usually started durong boot
-	bus = dbus.SystemBus()
-	global mainloop
-	mainloop = GObject.MainLoop()
+# 	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+# 	global bus
+# 	# SystemBus is global and usually started durong boot
+# 	bus = dbus.SystemBus()
+# 	global mainloop
+# 	mainloop = GObject.MainLoop()
 
-	# Argument check
-	#print(sys.argv)
+# 	# Argument check
+# 	#print(sys.argv)
 
-	# Connect to TDL device
-	connect_device()
+# 	# Connect to TDL device
+# 	connect_device()
 
-	# Trigger enabling notifications
-	enable_realtime_status_notification()
+# 	# Trigger enabling notifications
+# 	enable_realtime_status_notification()
 
-	# Toggle between start/stop session
-	if (sys.argv[1] == 'start'):
-		print('Start session')
-		start_session()
-	elif (sys.argv[1] == 'stop'):
-		print('Stop session')
-		stop_session()	
-	# stop_session()
-	#start_session()
+# 	# Toggle between start/stop session
+# 	if (sys.argv[1] == 'start'):
+# 		print('Start session')
+# 		start_session()
+# 	elif (sys.argv[1] == 'stop'):
+# 		print('Stop session')
+# 		stop_session()	
+# 	# stop_session()
+# 	#start_session()
 
-	mainloop.run()
+# 	mainloop.run()
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
 
-# sys.exit(0)
+#sys.exit(0)

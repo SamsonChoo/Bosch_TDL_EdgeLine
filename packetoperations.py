@@ -1,4 +1,4 @@
-
+import drivercode
 import senddata
 
 temperature_data = []
@@ -13,7 +13,7 @@ def round_temperature(x, prec = 1,base = 0.5):
 def process_packet(packet_arr):
     print("Processing packets")
     print('\n')
-    print(packet_arr)
+    #print(packet_arr)
     print('\n')
 	# Number of bytes in each packet sent by TDL device
     packet_size = 20
@@ -183,17 +183,17 @@ def process_packet(packet_arr):
                         # Extract pressure ---------------------------------------------------
 
                         # Lower 6 bits
-                        # pressure_lo_bits = ((bdt_data_array[pressure_index] & 0xFC) & 0xFF) >> 4
+                        pressure_lo_bits = ((packet_arr[pressure_index] & 0xFC) & 0xFF) >> 4
 
-                        # pressure_index -= 1
+                        pressure_index -= 1
 
                         # # Upper 4 bits
-                        # pressure_hi_bits = ((bdt_data_array[pressure_index] & 0x0F) & 0xFF) << 6
+                        pressure_hi_bits = ((packet_arr[pressure_index] & 0x0F) & 0xFF) << 6
 
-                        # pressure_result = pressure_hi_bits + pressure_lo_bits - 100
+                        pressure_result = pressure_hi_bits + pressure_lo_bits - 100
 
-                        # global pressure_data
-                        # pressure_data.append(pressure_result)
+                        global pressure_data
+                        pressure_data.append(pressure_result)
 
                 # --------------------------------------------------------------------------------                        
 
@@ -233,12 +233,19 @@ def process_packet(packet_arr):
         	#i += 1	
 
     else:
-    	print("Packets lost: " + packet_loss)
+    	print("Packets lost: %d" + %(packet_loss))
 
     print(temperature_data)
+    print(humidity_data)
+    print(pressure_data)
     print(unix_timestamp)
-    senddata.upload(temperature_data,
-					unix_timestamp,
-					humidity_data,
-					pressure_data)	       	
+
+    # try:
+    # 	drivercode.terminate()
+    # except:
+    # 	print('Entered exception block')
+    #senddata.upload(temperature_data,
+	#				unix_timestamp,
+	#					humidity_data,
+	#				pressure_data)	       	
 

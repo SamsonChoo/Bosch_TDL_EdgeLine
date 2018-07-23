@@ -4,21 +4,27 @@
 # Method called when data is successfully received
 #
 # Parameter definition:
-# 	temperature_data: Python List of temperature values recorded
-# 	humidity_data   : Python List of humidity values recorded
+#   temperature_data: Python List of temperature values recorded
+#   humidity_data   : Python List of humidity values recorded
 #   pressure_data   : Python List of pressure values recorded
 #   unix_timestamp  : Python List of Unix Timestamp values at which above parameters are recorded
 # 
 # Note: Temperature, humidity, pressure values are all recorded at the same time
-#		=> Temperature, humidity, pressure have the same Timestamp
+#   => Temperature, humidity, pressure have the same Timestamp
 #
 
 import paho.mqtt.client as mqtt
 import ssl, socket
 import json
+import drivercode
+import threading
+
+client = None
+stop_session_counter = 0
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, rc, *extra_params):
+   #global client
    print(('Connected with result code '+str(rc)))
    # Subscribing in on_connect() means that if we lose the connection and
    # reconnect then subscriptions will be renewed.
@@ -29,36 +35,73 @@ def on_connect(client, userdata, rc, *extra_params):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
+   #global client
    print('Topic: ' + msg.topic + '\nMessage: ' + str(msg.payload))
    if msg.topic.startswith( 'v1/devices/me/rpc/request/'):
        requestId = msg.topic[len('v1/devices/me/rpc/request/'):len(msg.topic)]
        print('This is a RPC call. RequestID: ' + requestId + '. Going to reply now!')
        client.publish('v1/devices/me/rpc/response/' + requestId, "{\"value1\":\"A\", \"value2\":\"B\"}", 1)
-   if "True" in str(msg.payload):
-       continue
-   if "False" in str(msg.payload):
-       continue
+   if "true" in str(msg.payload):
+       print("Entered start_session if block") 
+       drivercode.start_session()
+   if "false" in str(msg.payload):
+       print('Entered stop session if block')
+       drivercode.stop_session()
 
 def upload(temperature_data, unix_timestamp, humidity_data, pressure_data):
+    global client
     for i,w in enumerate(unix_timestamp):
         json_array={"Bosch_temperature":temperature_data[i],"Bosch_humidity":humidity_data[i]}
         json_data = json.dumps(json_array)
         print(json_data)
-        client = mqtt.Client()
-        client.on_connect = on_connect
-        client.on_message = on_message
+        # client = mqtt.Client()
+        # client.on_connect = on_connect
+        # client.on_message = on_message
         client.publish('v1/devices/me/attributes',str(json_data), 1)
 
-        client.tls_set(ca_certs="mqttserver.pub.pem", certfile="mqttclient.nopass.pem", keyfile=None, cert_reqs=ssl.CERT_REQUIRED,
+        # client.tls_set(ca_certs="mqttserver.pub.pem", certfile="mqttclient.nopass.pem", keyfile=None, cert_reqs=ssl.CERT_REQUIRED,
+        #                        tls_version=ssl.PROTOCOL_TLSv1, ciphers=None);
+
+        # client.tls_insecure_set(False)
+        # client.connect('thingsboard', 8883, 1)
+        # print("Entered upload method")
+
+
+        # # Blocking call that processes network traffic, dispatches callbacks and
+        # # handles reconnecting.
+        # # Other loop*() functions are available that give a threaded interface and a
+        # # manual interface.
+        # client.loop_forever()
+
+
+# Called to open a connection with Thingsboard
+def establish_connection():
+
+    global client
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.tls_set(ca_certs="mqttserver.pub.pem", certfile="mqttclient.nopass.pem", keyfile=None, cert_reqs=ssl.CERT_REQUIRED,
                                tls_version=ssl.PROTOCOL_TLSv1, ciphers=None);
 
-        client.tls_insecure_set(False)
-        client.connect('thingsboard', 8883, 1)
-        print("Entered upload method")
+    client.tls_insecure_set(False)
+    client.connect('thingsboard', 8883, 1)
+    print("Connection established")
+
+    # Create a new thread
+    # global stop_session_counter
+    # if (stop_session_counter == 0):
+    #   stop_session_counter += 1
+    #print("Calling stop session")
+    # t = threading.Thread(target=drivercode.stop_session())
+    # #threads.append(t)
+    # t.start()
+    #drivercode.stop_session()
+    #hread.start_new_thread(drivercode.stop_session(), 1)
 
 
-        # Blocking call that processes network traffic, dispatches callbacks and
-        # handles reconnecting.
-        # Other loop*() functions are available that give a threaded interface and a
-        # manual interface.
-        client.loop_forever()
+    # Blocking call that processes network traffic, dispatches callbacks and
+    # handles reconnecting.
+    # Other loop*() functions are available that give a threaded interface and a
+    # manual interface.
+    client.loop_forever()
