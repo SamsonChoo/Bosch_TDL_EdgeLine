@@ -41,20 +41,19 @@ def on_message(client, userdata, msg):
 
 def upload(temperature_data, unix_timestamp, humidity_data, pressure_data):
     for i,w in enumerate(unix_timestamp):
-        json_array={"Bosch_temperature":temperature_data[i],"Bosch_humidity":humidity_data[i]}
+        json_array={"Bosch_temperature":temperature_data[i],"Bosch_humidity":humidity_data[i],"Bosch_pressure":pressure_data[i]}
         json_data = json.dumps(json_array)
         print(json_data)
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
-        client.publish('v1/devices/me/attributes',str(json_data), 1)
+        client.publish('v1/devices/me/attributes',str(json_data),1)
 
         client.tls_set(ca_certs="mqttserver.pub.pem", certfile="mqttclient.nopass.pem", keyfile=None, cert_reqs=ssl.CERT_REQUIRED,
                                tls_version=ssl.PROTOCOL_TLSv1, ciphers=None);
 
         client.tls_insecure_set(False)
         client.connect('thingsboard', 8883, 1)
-        print("Entered upload method")
 
 
         # Blocking call that processes network traffic, dispatches callbacks and
