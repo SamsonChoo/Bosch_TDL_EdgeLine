@@ -51,7 +51,7 @@ def on_message(client, userdata, msg):
 def upload(temperature_data, unix_timestamp, humidity_data, pressure_data):
     global client
     for i,w in enumerate(unix_timestamp):
-        json_array={"Bosch_temperature":temperature_data[i],"Bosch_humidity":humidity_data[i]}
+        json_array={"Bosch-temperature":temperature_data[i],"Bosch-humidity":humidity_data[i],"Bosch-pressure":pressure_data[i]}
         json_data = json.dumps(json_array)
         print(json_data)
         # client = mqtt.Client()
