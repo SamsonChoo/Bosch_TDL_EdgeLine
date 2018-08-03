@@ -24,8 +24,9 @@ GATT_CHRC_IFACE =    'org.bluez.GattCharacteristic1'
 GATT_DESC_IFACE =    'org.bluez.GattDescriptor1'
 
 bus = None
+mainloop_start = None
+mainloop_stop = None
 mainloop = None
-
 # global receive_state
 receive_state = False
 
@@ -44,10 +45,38 @@ transfer_ongoing_counter = 0
 temp_packet_holder_counter = 0
 delete_logged_data_counter = 0
 
+def reset_counters():
+
+	global counter_realtime_status
+	global counter_data_transfer_status
+	global counter_data_transfer_download
+	global counter_start_session 
+	global auth_connection_counter 
+	global default_status_value_counter
+	#global data_transfer_status_changed_counter 
+	global transfer_ongoing_counter 
+	global temp_packet_holder_counter 
+	global delete_logged_data_counter 
+
+
+	counter_realtime_status = 0
+	counter_data_transfer_status = 0
+	counter_data_transfer_download = 0
+	counter_start_session = 0
+	auth_connection_counter = 0
+	default_status_value_counter = 0
+	#data_transfer_status_changed_counter = 0
+	transfer_ongoing_counter = 0
+	temp_packet_holder_counter = 0
+	delete_logged_data_counter = 0
+
 def terminate():
 	global mainloop
+	global bus
 	mainloop.quit()
-	print("Mainloop Terminated")
+	mainloop = None
+	bus = None
+	print("Terminated mainloop")
 
 def disconnect_device():
 
@@ -75,6 +104,13 @@ def read_log_cb(value):
 	#print("Entered read_log_handler")
 	print(value)
 	#terminate()
+
+def read_device_info_cb(value):
+	print("Entered read device information callback")
+	#print(value)
+	packetoperations.process_serial_number(value)
+	disconnect_device()
+	terminate()	
 
 # def auth_connection_cb():
 # 	return
@@ -183,12 +219,14 @@ def data_transfer_status_changed_cb(iface, changed_props, invalidated_props):
 	#counter_data_transfer_status = 0
 	#print("Data transfer status changed")
 	value = changed_props.get('Value', None)
+
 	if (value[0] == 1):
 		global transfer_ongoing_counter
 		if (transfer_ongoing_counter == 0):
 			transfer_ongoing_counter += 1
 			print("Transfer ongoing")
-	if(value[0] == 2):
+
+	if (value[0] == 2):
 		if (data_transfer_status_changed_counter == 0):
 			data_transfer_status_changed_counter += 1
 			print("Transfer done!")
@@ -200,6 +238,7 @@ def data_transfer_status_changed_cb(iface, changed_props, invalidated_props):
 			global packet_arr
 			#packet_arr = []
 			packetoperations.process_packet(packet_arr)
+			packet_arr = []
 			print("Terminating...")
 			terminate()	
 
@@ -230,11 +269,11 @@ def data_transfer_download_changed_cb(iface, changed_props, invalidated_props):
 		temp_packet_holder = value
 		#global packet_arr
 		#packet_arr = []
-		print(value)
-		print(type(value))
+		# print(value)
+		# print(type(value))
 		packet_arr.extend(value)		
 		#print(value)
-		print("\n")
+		#print("\n")
 
 	value = changed_props.get('Value', None)
 
@@ -243,8 +282,8 @@ def data_transfer_download_changed_cb(iface, changed_props, invalidated_props):
 	else:
 		# Update packet holder 
 		temp_packet_holder = value
-		print(value)
-		print('\n')
+		# print(value)
+		# print('\n')
 		packet_arr.extend(value)
 
 
@@ -270,6 +309,22 @@ def read_log_status():
     							reply_handler = read_log_cb, error_handler= generic_error_cb)
     #print('Set readValue...')
 
+def read_device_information():
+
+    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0009/char0018'
+    chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
+    chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
+
+    read_log_chrc = (chrc, chrc_props)
+    #print(read_log_chrc)
+    #read_log_chrc[0].ReadValue(dbus_interface=GATT_CHRC_IFACE, reply_handler=read_log_handler, error_handler=generic_error_cb)
+    offset = 0
+    read_log_chrc[0].ReadValue({'offset': dbus.UInt16(offset, variant_level=1)}, 
+    							dbus_interface=GATT_CHRC_IFACE, 
+    							reply_handler = read_device_info_cb, error_handler= generic_error_cb)
+
+
+
 # Authenticate connection with device
 # 	-> Required to perform any write operation
 # Default pin : 1-2-3-4
@@ -289,7 +344,7 @@ def auth_connection():
     									   dbus_interface=GATT_CHRC_IFACE) 
     									   #reply_handler=auth_connection_cb, 
     									   #error_handler=generic_error_cb)
-    #print("Value written")
+    print("Authenticating connection...")
 
 def delete_logged_data():
 
@@ -386,10 +441,12 @@ def start_session():
 	
 	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 	global bus
-	# SystemBus is global and usually started durong boot
+	# SystemBus is global and usually started during boot
 	bus = dbus.SystemBus()
 	global mainloop
 	mainloop = GObject.MainLoop()
+
+	reset_counters()
 
 	# Argument check
 	#print(sys.argv)
@@ -418,13 +475,9 @@ def stop_session():
 	global mainloop
 	mainloop = GObject.MainLoop()
 
-	# DBusGMainLoop(set_as_default=True)
-
-	# dbus_loop = DBusGMainLoop()
-
-	# bus = dbus.SessionBus(mainloop=dbus_loop)
-	# Argument check
-	#print(sys.argv)
+	global data_transfer_status_changed_counter
+	data_transfer_status_changed_counter = 0
+	reset_counters()
 
 	# Connect to TDL device
 	connect_device()
@@ -452,6 +505,22 @@ def stop_session():
 
 	# 3. Request bulk data transfer
 	#request_data_transfer() 
+
+def get_device_information():
+	
+	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+	global bus
+	# SystemBus is global and usually started during boot
+	bus = dbus.SystemBus()
+	global mainloop
+	mainloop = GObject.MainLoop()
+
+	# Connect to TDL device
+	connect_device()
+
+	read_device_information()
+
+	mainloop.run()	
 
 
 def enable_realtime_status_notification():
