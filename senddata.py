@@ -218,8 +218,8 @@ def upload_data(serial_number, temperature_data, unix_timestamp, humidity_data, 
     global client
     json_array={}
     for i,w in enumerate(unix_timestamp):
-        json_array=
-        {"ID":serial_number,
+        json_array={
+	"ID":serial_number,
          "telemetry":
             {"ts":w, "values":
                 {"Bosch-temperature":temperature_data[i],
