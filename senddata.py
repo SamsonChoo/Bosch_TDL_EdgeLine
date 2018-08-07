@@ -453,7 +453,7 @@ def establish_connection():
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
-    client.tls_set(ca_certs="ca.crt", certfile="test1.crt", keyfile=None, cert_reqs=ssl.CERT_REQUIRED,
+    client.tls_set(ca_certs="ca.crt", certfile="test1.crt", keyfile="test1.key", cert_reqs=ssl.CERT_REQUIRED,
                                tls_version=ssl.PROTOCOL_TLSv1, ciphers=None);
 
     client.tls_insecure_set(False)
