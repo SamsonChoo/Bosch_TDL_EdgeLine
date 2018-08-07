@@ -3,6 +3,8 @@ import drivercode
 import senddata
 import datetime
 
+global serial_number
+
 temperature_data = []
 unix_timestamp   = []
 shock_timestamp  = []
@@ -38,6 +40,8 @@ def round_temperature(x, prec = 1,base = 0.5):
     return round(base * round(float(x)/base), prec)
 
 def process_serial_number(packet_arr):
+    
+    global serial_number
 
     serial_number_string = ''.join(chr(i) for i in packet_arr)
 
@@ -355,7 +359,8 @@ def process_packet(packet_arr):
     print(shock_timestamp)
 
     # Call the method to upload data to dashboard
-    senddata.upload_data(temperature_data,
+    senddata.upload_data(serial_number,
+                         temperature_data,
                          unix_timestamp,
                          humidity_data,
                          pressure_data,

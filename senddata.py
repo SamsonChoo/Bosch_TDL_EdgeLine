@@ -142,7 +142,7 @@ def on_message(client, userdata, msg):
    if msg.topic.startswith( 'v1/devices/me/rpc/request/'):
        requestId = msg.topic[len('v1/devices/me/rpc/request/'):len(msg.topic)]
        print('This is a RPC call. RequestID: ' + requestId + '. Going to reply now!')
-       client.publish('v1/devices/me/rpc/response/' + requestId, "{\"value1\":\"A\", \"value2\":\"B\"}", 1)
+       #client.publish('v1/devices/me/rpc/response/' + requestId, "{\"value1\":\"A\", \"value2\":\"B\"}", 1)
 
    global interval_state
    global interval_call
@@ -212,29 +212,33 @@ def on_message(client, userdata, msg):
 # Note: Temperature, humidity, pressure values are all recorded at the same time
 #   => Temperature, humidity, pressure have the same Timestamp
 #
-def upload_data(temperature_data, unix_timestamp, humidity_data, pressure_data, battery_data):
-    global latitude
-    global longitude
+def upload_data(serial_number, temperature_data, unix_timestamp, humidity_data, pressure_data, battery_data):
+    #global latitude
+    #global longitude
     global client
-    json_array=[]
+    json_array={}
     for i,w in enumerate(unix_timestamp):
-        json_array.append({"ts":w, "values":
-          {"Bosch-temperature":temperature_data[i],
-           "Bosch-humidity":humidity_data[i],
-           "Bosch-pressure":pressure_data[i], 
-           "Bosch-battery":battery_data[i],
-           "Bosch-latitude":latitude,
-           "Bosch-longitude":longitude}})
-    json_data = json.dumps(json_array)
-    print(json_data)
+        json_array=
+        {"ID":serial_number,
+         "telemetry":
+            {"ts":w, "values":
+                {"Bosch-temperature":temperature_data[i],
+               "Bosch-humidity":humidity_data[i],
+               "Bosch-pressure":pressure_data[i], 
+               "Bosch-battery":battery_data[i]
+                }
+             }
+        }
+        json_data = json.dumps(json_array)
+        print(json_data)
+        client.publish('bosch/telemtry',str(json_data), 1)
 
-    latitude = float(latitude)
-    latitude += 1
-    latitude = str(latitude)
+    #latitude = float(latitude)
+    #latitude += 1
+    #latitude = str(latitude)
         # client = mqtt.Client()
         # client.on_connect = on_connect
         # client.on_message = on_message
-    client.publish('v1/devices/me/telemetry',str(json_data), 1)
 
         # client.tls_set(ca_certs="mqttserver.pub.pem", certfile="mqttclient.nopass.pem", keyfile=None, cert_reqs=ssl.CERT_REQUIRED,
         #                        tls_version=ssl.PROTOCOL_TLSv1, ciphers=None);
@@ -255,17 +259,20 @@ def upload_data(temperature_data, unix_timestamp, humidity_data, pressure_data, 
 def upload_device_info(year, month, day, serial_number, factory_line):
     print("Entered device upload method")
     global client
-    json_array = []
+    json_array = {}
     #json_array.append({"ts":1532681566000, "values": "Test_Upload"})
     production_date = year + " " + month + " " + day
     #print(production_date)
-    json_array={"Bosch_production_date": production_date,
+    json_array={"ID":serial_number,
+                "telemetry":
+                {"Bosch_production_date": production_date,
                 "Bosch-serial-number": serial_number,
                 "Bosch-factory-line": factory_line}
+               }
                          
     json_data = json.dumps(json_array)
 
-    client.publish('v1/devices/me/telemetry',str(json_data), 1)
+    client.publish('bosch/attribute',str(json_data), 1)
 
 def send_test_location():
 
