@@ -212,6 +212,7 @@ def on_message(client, userdata, msg):
 # Note: Temperature, humidity, pressure values are all recorded at the same time
 #   => Temperature, humidity, pressure have the same Timestamp
 #
+#
 def upload_data(serial_number, temperature_data, unix_timestamp, humidity_data, pressure_data, battery_data):
     #global latitude
     #global longitude
