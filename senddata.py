@@ -265,7 +265,7 @@ def upload_device_info(year, month, day, serial_number, factory_line):
     production_date = year + " " + month + " " + day
     #print(production_date)
     json_array={"ID":serial_number,
-                "telemetry":
+                "payload":
                 {"Bosch_production_date": production_date,
                 "Bosch-serial-number": serial_number,
                 "Bosch-factory-line": factory_line}
