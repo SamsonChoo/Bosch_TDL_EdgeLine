@@ -311,7 +311,7 @@ def read_log_status():
 
 def read_device_information():
 
-    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0009/char0018'
+    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0009/char000e'
     chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
     chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
 

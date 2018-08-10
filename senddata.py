@@ -6,7 +6,7 @@ import drivercode
 import threading
 #from threading import Timer
 import time
-
+import calendar
 import geocoder
 
 client = None
@@ -261,10 +261,11 @@ def upload_device_info(year, month, day, serial_number, factory_line):
     global client
     json_array = {}
     #json_array.append({"ts":1532681566000, "values": "Test_Upload"})
+    month=calendar.month_name[int(month)]
     production_date = year + " " + month + " " + day
     #print(production_date)
     json_array={"ID":serial_number,
-                "telemetry":
+                "payload":
                 {"Bosch_production_date": production_date,
                 "Bosch-serial-number": serial_number,
                 "Bosch-factory-line": factory_line}
@@ -456,8 +457,8 @@ def establish_connection():
     client.tls_set(ca_certs="ca.crt", certfile="test1.crt", keyfile="test1.key", cert_reqs=ssl.CERT_REQUIRED,
                                tls_version=ssl.PROTOCOL_TLSv1, ciphers=None);
 
-    client.tls_insecure_set(False)
-    client.connect('thingsboard', 18883, 1)
+    client.tls_insecure_set(True)
+    client.connect('tb.hpe-innovation.center', 18883, 1)
     print("Connection established")
 
 
