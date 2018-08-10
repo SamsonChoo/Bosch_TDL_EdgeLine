@@ -70,7 +70,8 @@ def process_serial_number(packet_arr):
 
     day = production_date[4:6]
 
-    #print(day)
+    print('day')
+    print(day)
 
     serial_number = serial_number_string[6:11]
 

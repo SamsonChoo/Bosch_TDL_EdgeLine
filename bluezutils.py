@@ -37,6 +37,7 @@ def find_device_in_objects(objects, device_address, adapter_pattern=None):
 		path_prefix = adapter.object_path
 	for path, ifaces in objects.iteritems():
 		device = ifaces.get(DEVICE_INTERFACE)
+                print device
 		if device is None:
 			continue
 		if (device["Address"] == device_address and
