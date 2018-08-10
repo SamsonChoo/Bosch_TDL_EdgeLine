@@ -23,6 +23,8 @@ GATT_SERVICE_IFACE = 'org.bluez.GattService1'
 GATT_CHRC_IFACE =    'org.bluez.GattCharacteristic1'
 GATT_DESC_IFACE =    'org.bluez.GattDescriptor1'
 
+BOSCH_MAC_ADDRESS =  "A0:E6:F8:6C:8B:87"
+
 bus = None
 mainloop_start = None
 mainloop_stop = None
@@ -78,16 +80,16 @@ def terminate():
 	bus = None
 	print("Terminated mainloop")
 
-def disconnect_device():
+def disconnect_device(mac_address):
 
 	tdl_mac_address = "A0:E6:F8:6C:8B:87"
-	device = bluezutils.find_device(tdl_mac_address, None)
+	device = bluezutils.find_device(mac_address, None)
 	device.Disconnect()
 	print("Disconnected")	
 
-def connect_device():
+def connect_device(mac_address):
 	tdl_mac_address = "A0:E6:F8:6C:8B:87"
-	device = bluezutils.find_device(tdl_mac_address, None)
+	device = bluezutils.find_device(mac_address, None)
 	device.Connect()
 	print("Connected")	
 
@@ -109,7 +111,7 @@ def read_device_info_cb(value):
 	print("Entered read device information callback")
 	#print(value)
 	packetoperations.process_serial_number(value)
-	disconnect_device()
+	disconnect_device(BOSCH_MAC_ADDRESS)
 	terminate()	
 
 # def auth_connection_cb():
@@ -124,7 +126,7 @@ def realtime_status_cb():
 	print("Realtime status enabled")
 	#global mainloop
 	#smainloop.run()
-	enable_data_transfer_status_notification()
+	enable_data_transfer_status_notification(BOSCH_MAC_ADDRESS)
 
 def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 	global counter_realtime_status
@@ -153,12 +155,12 @@ def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 
 				# Caveat to stop logging in start session
 				#stop_logging()
-				delete_logged_data()
+				delete_logged_data(BOSCH_MAC_ADDRESS)
 
 			# For stop_session()	
 			else:
 				print('Attempting to stop logging')
-				stop_logging()
+				stop_logging(BOSCH_MAC_ADDRESS)
 		# stop_logging()	
 
 
@@ -176,7 +178,7 @@ def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 			#global receive_state
 			if(receive_state == True):
 				print("Requesting data transfer")
-				request_data_transfer_init()
+				request_data_transfer_init(BOSCH_MAC_ADDRESS)
 
 			# Start session
 			else:
@@ -186,7 +188,7 @@ def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 				# 	delete_logged_data()
 				# Disconnect from device
 				print("Disconnecting in real time status changed")
-				disconnect_device()
+				disconnect_device(BOSCH_MAC_ADDRESS)
 
 				terminate()
 
@@ -197,11 +199,11 @@ def realtime_status_changed_cb(iface, changed_props, invalidated_props):
 		if (delete_logged_data_counter == 0):
 			delete_logged_data_counter += 1
 			print("Logged data deleted successfully")
-			start_logging()
+			start_logging(BOSCH_MAC_ADDRESS)
 
 def data_transfer_status_cb():
 	print("Data transfer status enabled")
-	enable_data_transfer_download_notification()
+	enable_data_transfer_download_notification(BOSCH_MAC_ADDRESS)
 	#terminate()
 
 def data_transfer_status_changed_cb(iface, changed_props, invalidated_props):
@@ -233,7 +235,7 @@ def data_transfer_status_changed_cb(iface, changed_props, invalidated_props):
 
 			#Disconnect from device
 			print("Disconnecting in data transfer status")
-			disconnect_device()
+			disconnect_device(BOSCH_MAC_ADDRESS)
 
 			global packet_arr
 			#packet_arr = []
@@ -247,7 +249,7 @@ def data_transfer_download_cb():
 	# All notifications now enabled...
 	#global mainloop
 	#mainloop.run()
-	auth_connection()
+	auth_connection(BOSCH_MAC_ADDRESS)
 	#terminate()
 
 def data_transfer_download_changed_cb(iface, changed_props, invalidated_props):
@@ -288,15 +290,15 @@ def data_transfer_download_changed_cb(iface, changed_props, invalidated_props):
 
 
 def request_from_packet_cb():
-	request_data_transfer_packet_zero()	
+	request_data_transfer_packet_zero(BOSCH_MAC_ADDRESS)	
 
 def request_from_packet_zero_cb():
-	request_data_transfer()	
+	request_data_transfer(BOSCH_MAC_ADDRESS)	
 #----------------------------------------------------------------------------------
 
-def read_log_status():
+def read_log_status(mac_address):
 
-    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char001d'
+    char_path = '/org/bluez/hci0/dev_'+mac_address.replace(':','_')+'/service001a/char001d'
     chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
     chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
 
@@ -309,9 +311,9 @@ def read_log_status():
     							reply_handler = read_log_cb, error_handler= generic_error_cb)
     #print('Set readValue...')
 
-def read_device_information():
+def read_device_information(mac_address):
 
-    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service0009/char000e'
+    char_path = '/org/bluez/hci0/dev_'+mac_address.replace(':','_')+'/service0009/char000e'
     chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
     chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
 
@@ -329,10 +331,10 @@ def read_device_information():
 # 	-> Required to perform any write operation
 # Default pin : 1-2-3-4
 # Currently PIN is hardcoded, no need to manually enter
-def auth_connection():
+def auth_connection(mac_address):
 
     # Update to required characteristic 
-    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char0036'
+    char_path = '/org/bluez/hci0/dev_'+mac_address.replace(':','_')+'/service001a/char0036'
     chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
     chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
     chrc_arr = (chrc, chrc_props)
@@ -346,10 +348,10 @@ def auth_connection():
     									   #error_handler=generic_error_cb)
     print("Authenticating connection...")
 
-def delete_logged_data():
+def delete_logged_data(mac_address):
 
 	# Update to required characteristic 
-    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char0038'
+    char_path = '/org/bluez/hci0/dev_'+mac_address.replace(':','_')+'/service001a/char0038'
     chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
     chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
     chrc_arr = (chrc, chrc_props)
@@ -363,9 +365,9 @@ def delete_logged_data():
     									   #error_handler=generic_error_cb)
     print('Wrote delete logged data cmd')									   	    
 
-def request_data_transfer_init():
+def request_data_transfer_init(mac_address):
 
-    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char003e'
+    char_path = '/org/bluez/hci0/dev_'+mac_address.replace(':','_')+'/service003a/char003e'
     chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
     chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
     chrc_arr = (chrc, chrc_props)
@@ -379,9 +381,9 @@ def request_data_transfer_init():
     									   error_handler=generic_error_cb)	    
     print("Transfer requested")
 
-def request_data_transfer_packet_zero():
+def request_data_transfer_packet_zero(mac_address):
 
-    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char003e'
+    char_path = '/org/bluez/hci0/dev_'+mac_address.replace(':','_')+'/service003a/char003e'
     chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
     chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
     chrc_arr = (chrc, chrc_props)
@@ -394,9 +396,9 @@ def request_data_transfer_packet_zero():
     									   reply_handler=request_from_packet_zero_cb,
     									   error_handler=generic_error_cb)
 
-def request_data_transfer():
+def request_data_transfer(mac_address):
 
-    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char003e'
+    char_path = '/org/bluez/hci0/dev_'+mac_address.replace(':','_')+'/service003a/char003e'
     chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
     chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
     chrc_arr = (chrc, chrc_props)
@@ -409,9 +411,9 @@ def request_data_transfer():
 
 
 
-def stop_logging():
+def stop_logging(mac_address):
 
-    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char001b'
+    char_path = '/org/bluez/hci0/dev_'+mac_address.replace(':','_')+'/service001a/char001b'
     chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
     chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
     chrc_arr = (chrc, chrc_props)
@@ -422,9 +424,9 @@ def stop_logging():
     chrc_arr[0].WriteValue(message_bytes, {'offset': dbus.UInt16(offset, variant_level=1)}, 
     									   dbus_interface=GATT_CHRC_IFACE)	    
     #print("Transfer requested")
-def start_logging():
+def start_logging(mac_address):
 
-    char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char001b'
+    char_path = '/org/bluez/hci0/dev_'+mac_address.replace(':','_')+'/service001a/char001b'
     chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
     chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
     chrc_arr = (chrc, chrc_props)
@@ -452,7 +454,7 @@ def start_session():
 	#print(sys.argv)
 
 	# Connect to TDL device
-	connect_device()
+	connect_device(BOSCH_MAC_ADDRESS)
 
 	# Trigger enabling notifications
 	# enable_realtime_status_notification()
@@ -461,7 +463,7 @@ def start_session():
 	receive_state = False
 
 	# Trigger enabling notifications
-	enable_realtime_status_notification()
+	enable_realtime_status_notification(BOSCH_MAC_ADDRESS)
 
 	mainloop.run()
 
@@ -480,7 +482,7 @@ def stop_session():
 	reset_counters()
 
 	# Connect to TDL device
-	connect_device()
+	connect_device(BOSCH_MAC_ADDRESS)
 
 	global receive_state
 	receive_state = True
@@ -488,7 +490,7 @@ def stop_session():
 	#mainloop.run()
 	# Trigger enabling notifications
 	#print("Attempting to enable notifications")
-	enable_realtime_status_notification()
+	enable_realtime_status_notification(BOSCH_MAC_ADDRESS)
 
 	mainloop.run()	
 	# Receiving data in this session
@@ -516,17 +518,17 @@ def get_device_information():
 	mainloop = GObject.MainLoop()
 
 	# Connect to TDL device
-	connect_device()
+	connect_device(BOSCH_MAC_ADDRESS)
 
-	read_device_information()
+	read_device_information(BOSCH_MAC_ADDRESS)
 
 	mainloop.run()	
 
 
-def enable_realtime_status_notification():
+def enable_realtime_status_notification(mac_address):
 
 	# Enable realtime status information notification .......................
-	char_path_realtime_status = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service001a/char001d'
+	char_path_realtime_status = '/org/bluez/hci0/dev_'+mac_address.replace(':','_')+'/service001a/char001d'
 	chrc_realtime_status = bus.get_object(BLUEZ_SERVICE_NAME, char_path_realtime_status)
 	chrc_props_realtime_status = chrc_realtime_status.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
 	chrc_arr_realtime_status = (chrc_realtime_status, chrc_props_realtime_status)
@@ -541,9 +543,9 @@ def enable_realtime_status_notification():
 	                         	 error_handler=generic_error_cb,
 	                             dbus_interface=GATT_CHRC_IFACE)
 
-def enable_data_transfer_status_notification():
+def enable_data_transfer_status_notification(mac_address):
 
-	char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char003b'
+	char_path = '/org/bluez/hci0/dev_'+mac_address.replace(':','_')+'/service003a/char003b'
 	chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
 	chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
 	chrc_arr = (chrc, chrc_props)
@@ -558,9 +560,9 @@ def enable_data_transfer_status_notification():
 	                         	 error_handler=generic_error_cb,
 	                             dbus_interface=GATT_CHRC_IFACE)
 
-def enable_data_transfer_download_notification():
+def enable_data_transfer_download_notification(mac_address):
 
-	char_path = '/org/bluez/hci0/dev_A0_E6_F8_6C_8B_87/service003a/char0040'
+	char_path = '/org/bluez/hci0/dev_'+mac_address.replace(':','_')+'/service003a/char0040'
 	chrc = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
 	chrc_props = chrc.GetAll(GATT_CHRC_IFACE, dbus_interface=DBUS_PROP_IFACE)
 	chrc_arr = (chrc, chrc_props)
