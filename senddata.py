@@ -113,7 +113,6 @@ def interval_logging():
 def on_connect(client, userdata, rc, *extra_params):
    #global client
    global test_counter
-   global serial_number
    test_counter += 1
    print(('Connected with result code '+str(rc)))
    # Subscribing in on_connect() means that if we lose the connection and
@@ -140,7 +139,6 @@ def on_connect(client, userdata, rc, *extra_params):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-   global serial_number
    
    print('Topic: ' + msg.topic + '\nMessage: ' + str(msg.payload))
    if msg.topic.startswith( 'bosch/rpc/' + str(serial_number) +'/'):
