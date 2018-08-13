@@ -119,7 +119,7 @@ def on_connect(client, userdata, rc, *extra_params):
    # reconnect then subscriptions will be renewed.
    client.subscribe('bosch/attribute')
    client.subscribe('bosch/telemetry')
-   client.subscribe('bosch/rpc/' + str(serial_number) +'/')
+   client.subscribe('bosch/rpc/' + str(packetoperations.serial_number) +'/')
 
    # Trying to get location, doesn't seem to work atm
    # Location from IP returns lat & long in Kansas, USA
@@ -141,8 +141,8 @@ def on_connect(client, userdata, rc, *extra_params):
 def on_message(client, userdata, msg):
    
    print('Topic: ' + msg.topic + '\nMessage: ' + str(msg.payload))
-   if msg.topic.startswith( 'bosch/rpc/' + str(serial_number) +'/'):
-       requestId = msg.topic[len('bosch/rpc/' + str(serial_number) +'/'):len(msg.topic)]
+   if msg.topic.startswith( 'bosch/rpc/' + str(packetoperations.serial_number) +'/'):
+       requestId = msg.topic[len('bosch/rpc/' + str(packetoperations.serial_number) +'/'):len(msg.topic)]
        print('This is a RPC call. RequestID: ' + requestId + '. Going to reply now!')
        #client.publish('v1/devices/me/rpc/response/' + requestId, "{\"value1\":\"A\", \"value2\":\"B\"}", 1)
 
