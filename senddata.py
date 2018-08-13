@@ -112,13 +112,14 @@ def interval_logging():
 def on_connect(client, userdata, rc, *extra_params):
    #global client
    global test_counter
+   global serial_number
    test_counter += 1
    print(('Connected with result code '+str(rc)))
    # Subscribing in on_connect() means that if we lose the connection and
    # reconnect then subscriptions will be renewed.
-   client.subscribe('v1/devices/me/attributes')
-   client.subscribe('v1/devices/me/attributes/response/+')
-   client.subscribe('v1/devices/me/rpc/request/+')
+   client.subscribe('bosch/attribute')
+   client.subscribe('bosch/telemetry')
+   client.subscribe('bosch/rpc/' + str(serial_number) +'/')
 
    # Trying to get location, doesn't seem to work atm
    # Location from IP returns lat & long in Kansas, USA
@@ -138,10 +139,11 @@ def on_connect(client, userdata, rc, *extra_params):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
+   global serial_number
    
    print('Topic: ' + msg.topic + '\nMessage: ' + str(msg.payload))
-   if msg.topic.startswith( 'v1/devices/me/rpc/request/'):
-       requestId = msg.topic[len('v1/devices/me/rpc/request/'):len(msg.topic)]
+   if msg.topic.startswith( 'bosch/rpc/' + str(serial_number) +'/'):
+       requestId = msg.topic[len('bosch/rpc/' + str(serial_number) +'/'):len(msg.topic)]
        print('This is a RPC call. RequestID: ' + requestId + '. Going to reply now!')
        #client.publish('v1/devices/me/rpc/response/' + requestId, "{\"value1\":\"A\", \"value2\":\"B\"}", 1)
 
