@@ -23,7 +23,7 @@ GATT_SERVICE_IFACE = 'org.bluez.GattService1'
 GATT_CHRC_IFACE =    'org.bluez.GattCharacteristic1'
 GATT_DESC_IFACE =    'org.bluez.GattDescriptor1'
 
-BOSCH_MAC_ADDRESS =  "A0:E6:F8:6C:8B:87"
+#BOSCH_MAC_ADDRESS =  "A0:E6:F8:6C:8B:87"
 
 bus = None
 mainloop_start = None
@@ -508,21 +508,23 @@ def stop_session():
 	# 3. Request bulk data transfer
 	#request_data_transfer() 
 
-def get_device_information():
-	
-	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-	global bus
+def get_device_information(mac_address):
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    global bus
+
 	# SystemBus is global and usually started during boot
-	bus = dbus.SystemBus()
-	global mainloop
-	mainloop = GObject.MainLoop()
+    bus = dbus.SystemBus()
+    global mainloop
+    mainloop = GObject.MainLoop()
 
+    global BOSCH_MAC_ADDRESS
+    BOSCH_MAC_ADDRESS = mac_address
 	# Connect to TDL device
-	connect_device(BOSCH_MAC_ADDRESS)
+    connect_device(BOSCH_MAC_ADDRESS)
 
-	read_device_information(BOSCH_MAC_ADDRESS)
+    read_device_information(BOSCH_MAC_ADDRESS)
 
-	mainloop.run()	
+    mainloop.run()	
 
 
 def enable_realtime_status_notification(mac_address):

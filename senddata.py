@@ -8,6 +8,7 @@ import threading
 import time
 import calendar
 import geocoder
+import os
 
 client = None
 stop_session_counter = 0
@@ -274,6 +275,8 @@ def upload_device_info(year, month, day, serial_number, factory_line):
                          
     json_data = json.dumps(json_array)
 
+    print(json_data)
+
     client.publish('bosch/attribute',str(json_data), 1)
 
 def send_test_location():
@@ -451,6 +454,30 @@ def send_test_location():
 # Called to open a connection with Thingsboard
 def establish_connection():
 
+    #Scan for bosch devices
+    f=open('scan.txt','w')
+    f.write('')
+    f.close()
+
+    print('Scaning for Bosch devices...')
+    os.system("sh scan.sh")
+
+    f=open('scan.txt','r')
+    content=f.read()
+    while content=='':
+        f=open('scan.txt','r')
+        content=f.read()
+    #
+
+    devices=[]
+    content=content.split('\n')
+
+    for line in content:
+        if 'Bosch' in line:
+            devices.append(line.split(' ')[0])
+    #
+    print(devices)
+
     global client
     client = mqtt.Client()
     client.on_connect = on_connect
@@ -482,18 +509,19 @@ def establish_connection():
 
     # Get device information 
     while True:
-       # Attempt to get device information
-       try:
-          drivercode.get_device_information()
-       # If session attempt fails because of DBus...
-       except:
-          print("Entered exception block")
-          continue
+         # Attempt to get device information
+        try:
+            for dev in devices:
+                drivercode.get_device_information(dev)
+        # If session attempt fails because of DBus...
+        except:
+            print("Entered exception block in senddata")
+            continue
 
-       break
+        break
 
     # Send dummy location points
-    # send_test_location()   
+    #send_test_location()   
 
 
     client.loop_forever()
