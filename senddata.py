@@ -117,10 +117,11 @@ def on_connect(client, userdata, rc, *extra_params):
    print(('Connected with result code '+str(rc)))
    # Subscribing in on_connect() means that if we lose the connection and
    # reconnect then subscriptions will be renewed.
+   client.subscribe([('bosch/rpc/00268',1),('bosch/attribute',0),('bosch/telemetry',0)])
    client.subscribe('bosch/attribute')
    client.subscribe('bosch/telemetry')
-   client.subscribe('bosch/rpc/' + str(packetoperations.serial_number) +'/')
-
+   print('bosch/rpc/' + str(packetoperations.serial_number))
+   client.subscribe('bosch/rpc/' + str(packetoperations.serial_number))
    # Trying to get location, doesn't seem to work atm
    # Location from IP returns lat & long in Kansas, USA
 
@@ -141,8 +142,8 @@ def on_connect(client, userdata, rc, *extra_params):
 def on_message(client, userdata, msg):
    
    print('Topic: ' + msg.topic + '\nMessage: ' + str(msg.payload))
-   if msg.topic.startswith( 'bosch/rpc/' + str(packetoperations.serial_number) +'/'):
-       requestId = msg.topic[len('bosch/rpc/' + str(packetoperations.serial_number) +'/'):len(msg.topic)]
+   if msg.topic.startswith( 'bosch/rpc/' + str(packetoperations.serial_number)):
+       requestId = msg.topic[len('bosch/rpc/' + str(packetoperations.serial_number)):len(msg.topic)]
        print('This is a RPC call. RequestID: ' + requestId + '. Going to reply now!')
        #client.publish('v1/devices/me/rpc/response/' + requestId, "{\"value1\":\"A\", \"value2\":\"B\"}", 1)
 
@@ -456,28 +457,28 @@ def send_test_location():
 def establish_connection():
 
     #Scan for bosch devices
-    f=open('scan.txt','w')
-    f.write('')
-    f.close()
+    # f=open('scan.txt','w')
+    # f.write('')
+    # f.close()
 
-    print('Scaning for Bosch devices...')
-    os.system("sh scan.sh")
+    # print('Scaning for Bosch devices...')
+    # os.system("sh scan.sh")
 
-    f=open('scan.txt','r')
-    content=f.read()
-    while content=='':
-        f=open('scan.txt','r')
-        content=f.read()
-    #
+    # f=open('scan.txt','r')
+    # content=f.read()
+    # while content=='':
+    #     f=open('scan.txt','r')
+    #     content=f.read()
+    # #
 
-    devices=[]
-    content=content.split('\n')
+    # devices=[]
+    # content=content.split('\n')
 
-    for line in content:
-        if 'Bosch' in line:
-            devices.append(line.split(' ')[0])
-    #
-    print(devices)
+    # for line in content:
+    #     if 'Bosch' in line:
+    #         devices.append(line.split(' ')[0])
+    # #
+    # print(devices)
 
     global client
     client = mqtt.Client()
@@ -512,8 +513,8 @@ def establish_connection():
     while True:
          # Attempt to get device information
         try:
-            for dev in devices:
-                drivercode.get_device_information(dev)
+            #for dev in devices:
+            drivercode.get_device_information('A0:E6:F8:6C:8B:87')
         # If session attempt fails because of DBus...
         except:
             print("Entered exception block in senddata")
